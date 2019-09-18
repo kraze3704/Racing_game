@@ -6,38 +6,39 @@ let CAR_X, CAR_Y, CAR_RADIUS = 10;
 let CAR_SPEED_X, CAR_SPEED_Y;
 
 const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
-let TRACK_W, TRACK_H;
+let TRACK_GRID = 
+[
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1,
+    1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+    1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+    1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+]
 
-let TRACK_GRID = new Array(TRACK_COLS * TRACK_ROWS);
 
 window.onload = () => {
     _CANVAS = document.getElementById('gameCanvas');
     _CANVAS_CONTEXT = _CANVAS.getContext('2d');
 
     TRACK_W = _CANVAS.width / TRACK_COLS; TRACK_H = _CANVAS.height / TRACK_ROWS;
-    console.log(`${TRACK_W} : ${TRACK_H}`);
     // calculate the width and height of track blocks
 
     _resetCar();
-    _ResetTracks();
 
     setInterval(function(){
         _DrawAll();
-        _MoveAll();
+        //_MoveAll();
     }, 1000 / _FPS );
-}
-
-calculateMousePos = (evt) => {
-    let rect = _CANVAS.getBoundingClientRect(), root = document.documentElement;
-
-    // account for margins, canvas position on page, scroll amount etc.
-    let _mouseX = evt.clientX - rect.left - root.scrollLeft;
-    let _mouseY = evt.clientY - rect.top - root.scrollTop;
-
-    return {
-        x: _mouseX,
-        y: _mouseY
-    };
 }
 
 _RectFilled = (topLeftX, topLeftY, boxWidth, boxHeight, fillColor) => {
@@ -97,15 +98,6 @@ _MoveAll = () => {
 
     CAR_Y += CAR_SPEED_Y;
     CAR_X += CAR_SPEED_X;
-}
-
-_ResetTracks = () => {
-
-    for(i=0 ; i < TRACK_COLS ; i++){
-        for(j=0 ; j < TRACK_ROWS ; j++){
-            TRACK_GRID[TRACK_COLS*j + i] = true;
-        }
-    };
 }
 
 _trackTileToIndex = (trackCol, trackRow) => {
