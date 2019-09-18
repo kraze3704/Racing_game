@@ -2,7 +2,7 @@
 let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
-let CAR_X, CAR_Y, CAR_RADIUS = 10;
+let CAR_X, CAR_Y;
 let CAR_SPEED_X, CAR_SPEED_Y;
 
 const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
@@ -25,6 +25,9 @@ let TRACK_GRID =
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ]
 
+let carImg = document.createElement("img");
+let carImgLoaded = false;
+
 
 window.onload = () => {
     _CANVAS = document.getElementById('gameCanvas');
@@ -33,11 +36,17 @@ window.onload = () => {
     TRACK_W = _CANVAS.width / TRACK_COLS; TRACK_H = _CANVAS.height / TRACK_ROWS;
     // calculate the width and height of track blocks
 
-    _resetCar();
+    _carReset();
+
+    carImg.src = "car.png";
+    // load car image
+    carImg.onload = () => {
+        carImgLoaded = true;
+    }
 
     setInterval(function(){
         _DrawAll();
-        //_MoveAll();
+        _MoveAll();
     }, 1000 / _FPS );
 }
 
@@ -53,9 +62,9 @@ _ballFilled = (centerX, centerY, radius, fillColor) => {
     _CANVAS_CONTEXT.fill();
 }  // draw a filled circle at (x,y)
 
-_resetCar = () => {
+_carReset = () => {
 
-    CAR_X = _CANVAS.width / 2;
+    CAR_X = _CANVAS.width / 2 + 50;
     CAR_Y = _CANVAS.height / 2;
 
     CAR_SPEED_X = 4;
@@ -65,20 +74,20 @@ _resetCar = () => {
 
 _Collision = () => {
 
-    if( CAR_X + CAR_RADIUS > _CANVAS.width ) {
+    if( CAR_X > _CANVAS.width ) {
         CAR_SPEED_X *= -1;
-    }else if( CAR_X - CAR_RADIUS < 0 ) {
+    }else if( CAR_X < 0 ) {
         CAR_SPEED_X *= -1;
     }  // collision check for left and right wall
 
-    if( CAR_Y + CAR_RADIUS > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
+    if( CAR_Y > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
 
     } 
 
     if( CAR_Y > _CANVAS.height ) {
-        _resetCar();
+        _carReset();
 
-    }else if( CAR_Y - CAR_RADIUS < 0 ) {
+    }else if( CAR_Y < 0 ) {
         CAR_SPEED_Y *= -1;
     }  // ball bounces off the top of the canvas, and resets if it hits the bottom of the canvas
 }
@@ -87,7 +96,7 @@ _MoveAll = () => {
 
     _Collision();
 
-    _breakAndBounceOffBrickAtPixelCoord(CAR_X, CAR_Y);
+    _bounceOffTrackAtPixelCoord(CAR_X, CAR_Y);
 
     /*
     if(BRICK_COUNT == 0) { // if there are no more bricks left
@@ -108,7 +117,7 @@ _isTrackAtTileCoord = (trackIndex) => {
     return (TRACK_GRID[trackIndex] == 1);
 }
 
-_breakAndBounceOffBrickAtPixelCoord = (pixelX, pixelY) => {
+_bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
     let _trackCol = Math.floor(pixelX / TRACK_W);
     let _trackRow = Math.floor(pixelY / TRACK_H);
 
@@ -157,8 +166,6 @@ _breakAndBounceOffBrickAtPixelCoord = (pixelX, pixelY) => {
             CAR_SPEED_Y *= -1;
         }
 
-        TRACK_GRID[trackIndex] = 0;
-
         return true; // return true if the ball is in contact with a brick
 
     }else {
@@ -182,10 +189,16 @@ _DrawTracks = () => {
     } // end of column
 }
 
+_DrawCar = () => {
+    if(carImgLoaded) {
+        _CANVAS_CONTEXT.drawImage(carImg, CAR_X - carImg.width/2, CAR_Y - carImg.height/2);
+    }
+}
+
 _DrawAll = () => {
     _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
 
     _DrawTracks(); // draws the set of bricks
 
-    _ballFilled(CAR_X, CAR_Y, CAR_RADIUS, '#FFFFFF');
+    _DrawCar();
 }
