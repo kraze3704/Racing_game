@@ -2,22 +2,24 @@
 let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
-let _ballX, _ballY, _ballRadius = 10;
-let _ballSpeedX, _ballSpeedY;
+let CAR_X, CAR_Y, CAR_RADIUS = 10;
+let CAR_SPEED_X, CAR_SPEED_Y;
 
-let _paddleX, _paddleY, _paddleHeight = 15, _paddleWidth = 150;
+const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
+let TRACK_W, TRACK_H;
 
-const BRICK_WIDTH = 80, BRICK_HEIGHT = 20, BRICK_GAP = 2, BRICK_COLS = 10, BRICK_ROWS = 14;
-// collision width&height of the brick, visiual gap, number of columns and rows
-
-let BRICK_GRID = new Array(BRICK_COLS * BRICK_ROWS), BRICK_COUNT = 0;
+let TRACK_GRID = new Array(TRACK_COLS * TRACK_ROWS);
 
 window.onload = () => {
     _CANVAS = document.getElementById('gameCanvas');
     _CANVAS_CONTEXT = _CANVAS.getContext('2d');
 
-    _resetBall(); // places the ball at the center of canvas with speed (0,6)
-    _ResetBricks();
+    TRACK_W = _CANVAS.width / TRACK_COLS; TRACK_H = _CANVAS.height / TRACK_ROWS;
+    console.log(`${TRACK_W} : ${TRACK_H}`);
+    // calculate the width and height of track blocks
+
+    _resetCar();
+    _ResetTracks();
 
     setInterval(function(){
         _DrawAll();
@@ -50,33 +52,33 @@ _ballFilled = (centerX, centerY, radius, fillColor) => {
     _CANVAS_CONTEXT.fill();
 }  // draw a filled circle at (x,y)
 
-_resetBall = () => {
+_resetCar = () => {
 
-    _ballX = _CANVAS.width / 2;
-    _ballY = _CANVAS.height / 2;
+    CAR_X = _CANVAS.width / 2;
+    CAR_Y = _CANVAS.height / 2;
 
-    _ballSpeedX = 0;
-    _ballSpeedY = 6;
+    CAR_SPEED_X = 4;
+    CAR_SPEED_Y = 6;
 
 }
 
 _Collision = () => {
 
-    if( _ballX + _ballRadius > _CANVAS.width ) {
-        _ballSpeedX *= -1;
-    }else if( _ballX - _ballRadius < 0 ) {
-        _ballSpeedX *= -1;
+    if( CAR_X + CAR_RADIUS > _CANVAS.width ) {
+        CAR_SPEED_X *= -1;
+    }else if( CAR_X - CAR_RADIUS < 0 ) {
+        CAR_SPEED_X *= -1;
     }  // collision check for left and right wall
 
-    if( _ballY + _ballRadius > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
+    if( CAR_Y + CAR_RADIUS > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
 
     } 
 
-    if( _ballY > _CANVAS.height ) {
-        _resetBall();
+    if( CAR_Y > _CANVAS.height ) {
+        _resetCar();
 
-    }else if( _ballY - _ballRadius < 0 ) {
-        _ballSpeedY *= -1;
+    }else if( CAR_Y - CAR_RADIUS < 0 ) {
+        CAR_SPEED_Y *= -1;
     }  // ball bounces off the top of the canvas, and resets if it hits the bottom of the canvas
 }
 
@@ -84,90 +86,86 @@ _MoveAll = () => {
 
     _Collision();
 
-    _breakAndBounceOffBrickAtPixelCoord(_ballX, _ballY);
+    _breakAndBounceOffBrickAtPixelCoord(CAR_X, CAR_Y);
 
+    /*
     if(BRICK_COUNT == 0) { // if there are no more bricks left
         _resetBall(); // reset ball position and speed
         _ResetBricks(); // reset all the bricks
     }
+    */
 
-    _ballY += _ballSpeedY;
-    _ballX += _ballSpeedX;
+    CAR_Y += CAR_SPEED_Y;
+    CAR_X += CAR_SPEED_X;
 }
 
-_ResetBricks = () => {
+_ResetTracks = () => {
 
-    for(i=0 ; i < BRICK_COLS ; i++){
-        for(j=0 ; j < BRICK_ROWS ; j++){
-            if(j < 3) {} // empty first three rows of the bricks
-            else {
-                BRICK_GRID[BRICK_COLS*j + i] = true;
-                BRICK_COUNT++; // add a brick counter for each brick
-            }
+    for(i=0 ; i < TRACK_COLS ; i++){
+        for(j=0 ; j < TRACK_ROWS ; j++){
+            TRACK_GRID[TRACK_COLS*j + i] = true;
         }
     };
-    //console.dir(BRICK_GRID);
 }
 
-_brickTileToIndex = (brickCol, brickRow) => {
-    return brickCol + BRICK_COLS * brickRow;
+_trackTileToIndex = (trackCol, trackRow) => {
+    return trackCol + TRACK_COLS * trackRow;
 }
 
-_isBrickAtTileCoord = (brickIndex) => {
-    return (BRICK_GRID[brickIndex] == 1);
+_isTrackAtTileCoord = (trackIndex) => {
+    return (TRACK_GRID[trackIndex] == 1);
 }
 
 _breakAndBounceOffBrickAtPixelCoord = (pixelX, pixelY) => {
-    let _brickCol = Math.floor(pixelX / BRICK_WIDTH);
-    let _brickRow = Math.floor(pixelY / BRICK_HEIGHT);
+    let _trackCol = Math.floor(pixelX / TRACK_W);
+    let _trackRow = Math.floor(pixelY / TRACK_H);
 
     // if statement to check if the col,row is still in range
-    if(_brickCol < 0 || _brickCol >= BRICK_COLS ||
-        _brickRow < 0 || _brickRow >= BRICK_ROWS) {
+    if(_trackCol < 0 || _trackCol >= TRACK_COLS ||
+        _trackRow < 0 || _trackRow >= TRACK_ROWS) {
             return false; // close function to avoid checking out of array range and return false
         }
 
-    let brickIndex = _brickTileToIndex(_brickCol, _brickRow);
+    let trackIndex = _trackTileToIndex(_trackCol, _trackRow);
 
-    if( _isBrickAtTileCoord(brickIndex) ) {
+    if( _isTrackAtTileCoord(trackIndex) ) {
         // in contact with a brick, now for case check
-        let _prevBallX = _ballX - _ballSpeedX;
-        let _prevBallY = _ballY - _ballSpeedY;
-        let _prevBrickCol = Math.floor(_prevBallX / BRICK_WIDTH);
-        let _prevBrickRow = Math.floor(_prevBallY / BRICK_HEIGHT);
+        let _prevCarX = CAR_X - CAR_SPEED_X;
+        let _prevCarY = CAR_Y - CAR_SPEED_Y;
+        let _prevTrackCol = Math.floor(_prevCarX / TRACK_W);
+        let _prevTrackRow = Math.floor(_prevCarY / TRACK_H);
 
         let bothTestFailed = true;
         // flag to determine corner collisions
 
         // case A. ball came in horizontally: value of column is different
-        if( _prevBrickCol != _brickCol) {
-            let _adjacentBrickIndex = _brickTileToIndex(_prevBrickCol, _brickRow)
+        if( _prevTrackCol != _trackCol) {
+            let _adjacentTrackIndex = _trackTileToIndex(_prevTrackCol, _trackRow)
             // brick index of where the ball would be going towards
 
-            if(BRICK_GRID[_adjacentBrickIndex] != 1) {
-                _ballSpeedX *= -1; // flip the horizontal speed of the ball
+            if(TRACK_GRID[_adjacentTrackIndex] != 1) {
+                CAR_SPEED_X *= -1; // flip the horizontal speed of the ball
                 bothTestFailed = false;
             }
 
         }
         // case B. ball came in vertically: value of row is different
-        if( _prevBrickRow != _brickRow) {
-            let _adjacentBrickIndex = _brickTileToIndex(_brickCol, _prevBrickRow)
+        if( _prevTrackRow != _trackRow) {
+            let _adjacentTrackIndex = _trackTileToIndex(_trackCol, _prevTrackRow)
 
-            if(BRICK_GRID[_adjacentBrickIndex] != 1) {
-                _ballSpeedY *= -1; // flip the vertical speed of the ball
+            if(TRACK_GRID[_adjacentTrackIndex] != 1) {
+                CAR_SPEED_Y *= -1; // flip the vertical speed of the ball
                 bothTestFailed = false;
             }
         }
 
         // case C. ball hit the corner of the brick: both column and row value are different
         if(bothTestFailed) { // if the ball is going into a corner with both adjacent bricks still there
-            _ballSpeedX *= -1;
-            _ballSpeedY *= -1;
+            CAR_SPEED_X *= -1;
+            CAR_SPEED_Y *= -1;
         }
 
-        BRICK_GRID[brickIndex] = 0;
-        BRICK_COUNT--; // decrease the brick count by one
+        TRACK_GRID[trackIndex] = 0;
 
         return true; // return true if the ball is in contact with a brick
 
@@ -176,16 +174,17 @@ _breakAndBounceOffBrickAtPixelCoord = (pixelX, pixelY) => {
     }
 }
 
-_DrawBricks = () => {
-    for(col=0 ; col < BRICK_COLS ; col++) {  // for each column
-        for(row=0 ; row < BRICK_ROWS ; row++) {  // for each row in that column
-            // calculate the coordinates where each brick will be in
-            let BrickTopLeftX = col * BRICK_WIDTH;
-            let BrickTopLeftY = row * BRICK_HEIGHT;
+_DrawTracks = () => {
 
-            if( _isBrickAtTileCoord(_brickTileToIndex(col, row) ) ){ // check if the brick is still there
+    for(col=0 ; col < TRACK_COLS ; col++) {  // for each column
+        for(row=0 ; row < TRACK_ROWS ; row++) {  // for each row in that column
+            // calculate the coordinates where each brick will be in
+            let TrackTopLeftX = col * TRACK_W;
+            let TrackTopLeftY = row * TRACK_H;
+
+            if( _isTrackAtTileCoord(_trackTileToIndex(col, row) ) ){ // check if the brick is still there
                 // defined constant BRICK_GAP is used to add a margin around the brick for better visibilty
-                _RectFilled(BrickTopLeftX + BRICK_GAP, BrickTopLeftY + BRICK_GAP, BRICK_WIDTH -(BRICK_GAP*2), BRICK_HEIGHT -(BRICK_GAP*2), 'cyan');
+                _RectFilled(TrackTopLeftX + TRACK_GAP, TrackTopLeftY + TRACK_GAP, TRACK_W -(TRACK_GAP*2), TRACK_H -(TRACK_GAP*2), 'cyan');
             }else{} // if the grid value is false brick is not drawn
         } // end of row
     } // end of column
@@ -194,7 +193,7 @@ _DrawBricks = () => {
 _DrawAll = () => {
     _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
 
-    _DrawBricks(); // draws the set of bricks
+    _DrawTracks(); // draws the set of bricks
 
-    _ballFilled(_ballX, _ballY, _ballRadius, '#FFFFFF');
+    _ballFilled(CAR_X, CAR_Y, CAR_RADIUS, '#FFFFFF');
 }
