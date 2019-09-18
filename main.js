@@ -19,14 +19,6 @@ window.onload = () => {
     _resetBall(); // places the ball at the center of canvas with speed (0,6)
     _ResetBricks();
 
-    _paddleX = (_CANVAS.width - _paddleWidth) / 2;
-    _paddleY = _CANVAS.height * 0.9;
-
-    _CANVAS.addEventListener('mousemove', function(evt) {
-        let mousePos = calculateMousePos(evt);
-        _paddleX = mousePos.x - (_paddleWidth/2);
-    });
-
     setInterval(function(){
         _DrawAll();
         _MoveAll();
@@ -68,17 +60,6 @@ _resetBall = () => {
 
 }
 
-_paddleCollision = () => {
-
-    if(_ballSpeedY > 0) { // paddle collision will only happen when the ball is moving downwards
-        _ballSpeedY *= -1;
-
-        let _ballSpeedX_Mod = _ballX - _paddleX - (_paddleWidth/2);
-
-        _ballSpeedX = _ballSpeedX_Mod/10;
-    }
-}
-
 _Collision = () => {
 
     if( _ballX + _ballRadius > _CANVAS.width ) {
@@ -89,11 +70,7 @@ _Collision = () => {
 
     if( _ballY + _ballRadius > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
 
-        if( _ballX > _paddleX && _ballX < _paddleX + _paddleWidth) {
-            _paddleCollision();
-        }
-
-    } // before reaching the edge, check for paddle collision and run the code if the ball is in contact with paddle
+    } 
 
     if( _ballY > _CANVAS.height ) {
         _resetBall();
@@ -218,8 +195,6 @@ _DrawAll = () => {
     _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
 
     _DrawBricks(); // draws the set of bricks
-
-    _RectFilled(_paddleX, _paddleY, _paddleWidth, _paddleHeight, '#FFFFFF');
 
     _ballFilled(_ballX, _ballY, _ballRadius, '#FFFFFF');
 }
