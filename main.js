@@ -57,12 +57,14 @@ window.onload = () => {
         }
 
         if(evt.keyCode == KEY_LEFT_ARROW || evt.keyCode == KEY_A) {
-            CAR_ANGLE += 0.25 * Math.PI;
-        } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
             CAR_ANGLE -= 0.25 * Math.PI;
+        } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
+            CAR_ANGLE += 0.25 * Math.PI;
         }
 
-        evt.preventDefault(); // block keys from serving their default functionality
+        if(evt.keyCode != 116) {  // excluded f5 key for refreshing
+            evt.preventDefault(); // block keys from serving their default functionality
+        }
     });
     document.addEventListener("keyup", keyReleased = (evt) => {
         document.getElementById("debugText").innerHTML = "KeyCode released: " + evt.keyCode;
