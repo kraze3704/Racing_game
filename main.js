@@ -2,7 +2,7 @@
 let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
-let CAR_X, CAR_Y;
+let CAR_X, CAR_Y, CAR_ANGLE = 0;
 let CAR_SPEED_X, CAR_SPEED_Y;
 
 const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
@@ -190,8 +190,15 @@ _DrawTracks = () => {
 }
 
 _DrawCar = () => {
+    CAR_ANGLE += 0.2;
+
     if(carImgLoaded) {
-        _CANVAS_CONTEXT.drawImage(carImg, CAR_X - carImg.width/2, CAR_Y - carImg.height/2);
+        _CANVAS_CONTEXT.save();
+        _CANVAS_CONTEXT.translate(CAR_X, CAR_Y); // sets the point where the target will be
+        _CANVAS_CONTEXT.rotate(CAR_ANGLE);  // rotate by CAR_ANGLE
+        _CANVAS_CONTEXT.drawImage(carImg, -carImg.width/2, -carImg.height/2);
+        _CANVAS_CONTEXT.restore();
+        console.log(`${CAR_X}, ${CAR_Y}`);
     }
 }
 
