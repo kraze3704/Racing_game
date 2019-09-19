@@ -3,7 +3,7 @@ let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
 let CAR_X, CAR_Y, CAR_ANGLE = 0;
-let CAR_SPEED_X, CAR_SPEED_Y;
+let CAR_SPEED;
 
 const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
 let TRACK_GRID = 
@@ -24,6 +24,9 @@ let TRACK_GRID =
     1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ]
+
+const KEY_UP_ARROW = 38, KEY_DOWN_ARROW = 40, KEY_LEFT_ARROW = 37, KEY_RIGHT_ARROW = 39;
+const KEY_W = 87, KEY_S = 83, KEY_A = 65, KEY_D = 68;
 
 let carImg = document.createElement("img");
 let carImgLoaded = false;
@@ -46,6 +49,20 @@ window.onload = () => {
 
     document.addEventListener("keydown", keyPressed = (evt) => {
         document.getElementById("debugText").innerHTML = "KeyCode pushed: " + evt.keyCode;
+
+        if(evt.keyCode == KEY_UP_ARROW || evt.keyCode == KEY_W) {
+            CAR_SPEED += 1.5;
+        } else if(evt.keyCode == KEY_DOWN_ARROW || evt.keyCode == KEY_S) {
+            CAR_SPEED -= 1.5;
+        }
+
+        if(evt.keyCode == KEY_LEFT_ARROW || evt.keyCode == KEY_A) {
+            CAR_ANGLE += 0.25 * Math.PI;
+        } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
+            CAR_ANGLE -= 0.25 * Math.PI;
+        }
+
+        evt.preventDefault(); // block keys from serving their default functionality
     });
     document.addEventListener("keyup", keyReleased = (evt) => {
         document.getElementById("debugText").innerHTML = "KeyCode released: " + evt.keyCode;
@@ -74,8 +91,7 @@ _carReset = () => {
     CAR_X = _CANVAS.width / 2 + 50;
     CAR_Y = _CANVAS.height / 2;
 
-    CAR_SPEED_X = 4;
-    CAR_SPEED_Y = 6;
+    CAR_SPEED = 0;
 
 }
 
@@ -99,22 +115,6 @@ _Collision = () => {
     }  // ball bounces off the top of the canvas, and resets if it hits the bottom of the canvas
 }
 
-_MoveAll = () => {
-
-    _Collision();
-
-    _bounceOffTrackAtPixelCoord(CAR_X, CAR_Y);
-
-    /*
-    if(BRICK_COUNT == 0) { // if there are no more bricks left
-        _resetBall(); // reset ball position and speed
-        _ResetBricks(); // reset all the bricks
-    }
-    */
-
-    CAR_Y += CAR_SPEED_Y;
-    CAR_X += CAR_SPEED_X;
-}
 
 _trackTileToIndex = (trackCol, trackRow) => {
     return trackCol + TRACK_COLS * trackRow;
@@ -180,6 +180,15 @@ _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
     }
 }
 
+_MoveAll = () => {
+
+    // _Collision();
+    // _bounceOffTrackAtPixelCoord(CAR_X, CAR_Y);
+
+    CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
+    CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
+}
+
 _DrawTracks = () => {
 
     for(col=0 ; col < TRACK_COLS ; col++) {  // for each column
@@ -205,8 +214,6 @@ _drawBitmapCenteredAtLocationWithRotation = (graphic, atX, atY, withAngle) => {
 }
 
 _DrawCar = () => {
-    CAR_ANGLE += 0.2;
-
     if(carImgLoaded) {
         _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
 
