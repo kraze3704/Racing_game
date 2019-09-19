@@ -44,6 +44,13 @@ window.onload = () => {
         carImgLoaded = true;
     }
 
+    document.addEventListener("keydown", keyPressed = (evt) => {
+        document.getElementById("debugText").innerHTML = "KeyCode pushed: " + evt.keyCode;
+    });
+    document.addEventListener("keyup", keyReleased = (evt) => {
+        document.getElementById("debugText").innerHTML = "KeyCode released: " + evt.keyCode;
+    });
+
     setInterval(function(){
         _DrawAll();
         _MoveAll();
@@ -189,16 +196,20 @@ _DrawTracks = () => {
     } // end of column
 }
 
+_drawBitmapCenteredAtLocationWithRotation = (graphic, atX, atY, withAngle) => {
+    _CANVAS_CONTEXT.save();
+    _CANVAS_CONTEXT.translate(atX, atY); // sets the point where the target will be
+    _CANVAS_CONTEXT.rotate(withAngle);  // rotate by CAR_ANGLE
+    _CANVAS_CONTEXT.drawImage(graphic, -graphic.width/2, -graphic.height/2);
+    _CANVAS_CONTEXT.restore();
+}
+
 _DrawCar = () => {
     CAR_ANGLE += 0.2;
 
     if(carImgLoaded) {
-        _CANVAS_CONTEXT.save();
-        _CANVAS_CONTEXT.translate(CAR_X, CAR_Y); // sets the point where the target will be
-        _CANVAS_CONTEXT.rotate(CAR_ANGLE);  // rotate by CAR_ANGLE
-        _CANVAS_CONTEXT.drawImage(carImg, -carImg.width/2, -carImg.height/2);
-        _CANVAS_CONTEXT.restore();
-        console.log(`${CAR_X}, ${CAR_Y}`);
+        _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
+
     }
 }
 
