@@ -3,7 +3,7 @@ let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
 let CAR_X, CAR_Y, CAR_ANGLE = 0;
-let CAR_SPEED;
+let CAR_SPEED, CAR_SPEED_LIMIT = 10;
 
 const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
 let TRACK_GRID = 
@@ -25,8 +25,12 @@ let TRACK_GRID =
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ]
 
+// keyboard keyCode values save to constants
 const KEY_UP_ARROW = 38, KEY_DOWN_ARROW = 40, KEY_LEFT_ARROW = 37, KEY_RIGHT_ARROW = 39;
 const KEY_W = 87, KEY_S = 83, KEY_A = 65, KEY_D = 68;
+
+// keyboard hold state variables
+let keyHeld_Gas = false, keyHeld_Reverse = false, keyHeld_turnLeft = false, keyHeld_turnRight = false;
 
 let carImg = document.createElement("img");
 let carImgLoaded = false;
@@ -48,26 +52,40 @@ window.onload = () => {
     }
 
     document.addEventListener("keydown", keyPressed = (evt) => {
-        document.getElementById("debugText").innerHTML = "KeyCode pushed: " + evt.keyCode;
 
         if(evt.keyCode == KEY_UP_ARROW || evt.keyCode == KEY_W) {
-            CAR_SPEED += 1.5;
+            keyHeld_Gas = true;
         } else if(evt.keyCode == KEY_DOWN_ARROW || evt.keyCode == KEY_S) {
-            CAR_SPEED -= 1.5;
+            keyHeld_Reverse = true;
         }
 
         if(evt.keyCode == KEY_LEFT_ARROW || evt.keyCode == KEY_A) {
-            CAR_ANGLE -= 0.25 * Math.PI;
+            keyHeld_turnLeft = true;
         } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
-            CAR_ANGLE += 0.25 * Math.PI;
+            keyHeld_turnRight = true;
         }
 
-        if(evt.keyCode != 116) {  // excluded f5 key for refreshing
-            evt.preventDefault(); // block keys from serving their default functionality
+        if(evt.keyCode == 116 || evt.keyCode == 123) {  // excluded f5(116) f12(123) key for refreshing / console window
+            return;
         }
+
+        evt.preventDefault(); // block keys from serving their default functionality
+
     });
+    
     document.addEventListener("keyup", keyReleased = (evt) => {
-        document.getElementById("debugText").innerHTML = "KeyCode released: " + evt.keyCode;
+
+        if(evt.keyCode == KEY_UP_ARROW || evt.keyCode == KEY_W) {
+            keyHeld_Gas = false;
+        } else if(evt.keyCode == KEY_DOWN_ARROW || evt.keyCode == KEY_S) {
+            keyHeld_Reverse = false;
+        }
+
+        if(evt.keyCode == KEY_LEFT_ARROW || evt.keyCode == KEY_A) {
+            keyHeld_turnLeft = false;
+        } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
+            keyHeld_turnRight = false;
+        }
     });
 
     setInterval(function(){
@@ -183,12 +201,25 @@ _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
 }
 
 _MoveAll = () => {
+    if(keyHeld_Gas && CAR_SPEED < CAR_SPEED_LIMIT) {
+        CAR_SPEED += 0.7;
 
-    // _Collision();
-    // _bounceOffTrackAtPixelCoord(CAR_X, CAR_Y);
+    } else if(keyHeld_Reverse && CAR_SPEED > -1 * CAR_SPEED_LIMIT) {
+        CAR_SPEED -= 0.7;
+
+    }
+
+    if(keyHeld_turnLeft) {
+        CAR_ANGLE += -0.03 * Math.PI;
+
+    } else if(keyHeld_turnRight) {
+        CAR_ANGLE += 0.03 * Math.PI;
+
+    }
 
     CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
     CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
+
 }
 
 _DrawTracks = () => {
