@@ -115,7 +115,7 @@ _carReset = () => {
 
 }
 
-_MoveAll = () => {
+_CarMove = () => {
 
     if(keyHeld_Gas && CAR_SPEED < CAR_SPEED_LIMIT) {
         CAR_SPEED += CAR_DRIVE_POWER;
@@ -146,13 +146,13 @@ _MoveAll = () => {
         CAR_SPEED *= -0.35;
     }
 
-    /*
-    CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
-    CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
-*/
     document.getElementById('debugText').innerHTML = `current car speed: [${CAR_SPEED}]`;
     CAR_SPEED *= GROUNDSPEED_DECAY_MULT; // decrease the speed of car each frame
+}
 
+_MoveAll = () => {
+
+    _CarMove();
 }
 
 _RectFilled = (topLeftX, topLeftY, boxWidth, boxHeight, fillColor) => {
@@ -191,48 +191,6 @@ _checkForTrackAtPixelCoord = (pixelX, pixelY) => {
 
     return (TRACK_GRID[trackIndex] == TRACK_ROAD);
 
-    if( _isTrackAtTileCoord(trackIndex) ) {
-        // in contact with a brick, now for case check
-        let _prevCarX = CAR_X - CAR_SPEED_X;
-        let _prevCarY = CAR_Y - CAR_SPEED_Y;
-        let _prevTrackCol = Math.floor(_prevCarX / TRACK_W);
-        let _prevTrackRow = Math.floor(_prevCarY / TRACK_H);
-
-        let bothTestFailed = true;
-        // flag to determine corner collisions
-
-        // case A. ball came in horizontally: value of column is different
-        if( _prevTrackCol != _trackCol) {
-            let _adjacentTrackIndex = _trackTileToIndex(_prevTrackCol, _trackRow)
-            // brick index of where the ball would be going towards
-
-            if(TRACK_GRID[_adjacentTrackIndex] != 1) {
-                CAR_SPEED_X *= -1; // flip the horizontal speed of the ball
-                bothTestFailed = false;
-            }
-
-        }
-        // case B. ball came in vertically: value of row is different
-        if( _prevTrackRow != _trackRow) {
-            let _adjacentTrackIndex = _trackTileToIndex(_trackCol, _prevTrackRow)
-
-            if(TRACK_GRID[_adjacentTrackIndex] != 1) {
-                CAR_SPEED_Y *= -1; // flip the vertical speed of the ball
-                bothTestFailed = false;
-            }
-        }
-
-        // case C. ball hit the corner of the brick: both column and row value are different
-        if(bothTestFailed) { // if the ball is going into a corner with both adjacent bricks still there
-            CAR_SPEED_X *= -1;
-            CAR_SPEED_Y *= -1;
-        }
-
-        return true; // return true if the ball is in contact with a brick
-
-    }else {
-        return false;
-    }
 }
 
 _DrawTracks = () => {
@@ -273,28 +231,3 @@ _DrawAll = () => {
 
     _DrawCar();
 }
-
-
-/*
-
-_Collision = () => {
-
-    if( CAR_X > _CANVAS.width ) {
-        CAR_SPEED_X *= -1;
-    }else if( CAR_X < 0 ) {
-        CAR_SPEED_X *= -1;
-    }  // collision check for left and right wall
-
-    if( CAR_Y > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
-
-    } 
-
-    if( CAR_Y > _CANVAS.height ) {
-        _carReset();
-
-    }else if( CAR_Y < 0 ) {
-        CAR_SPEED_Y *= -1;
-    }  // ball bounces off the top of the canvas, and resets if it hits the bottom of the canvas
-}
-
-*/
