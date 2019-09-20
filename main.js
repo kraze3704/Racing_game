@@ -2,7 +2,7 @@
 let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
-let CAR_X, CAR_Y, CAR_ANGLE = 0;
+let CAR_X, CAR_Y, CAR_ANGLE = (-0.5 * Math.PI); // CAR_ANGLE faces north
 let CAR_SPEED;
 const CAR_DRIVE_POWER = 1, CAR_REVERSE_POWER = 0.8, CAR_TURN_RATE = 0.03, CAR_MIN_TURN_SPEED = 0.5, CAR_SPEED_LIMIT = 14, GROUNDSPEED_DECAY_MULT = 0.94;
 
@@ -20,12 +20,14 @@ let TRACK_GRID =
     1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
     1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
     1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-    1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+    1, 0, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, // added a 2, tells the start position for the car
     1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ]
+
+const TRACK_ROAD = 0, TRACK_WALL = 1, TRACK_PLAYER = 2;
 
 // keyboard keyCode values save to constants
 const KEY_UP_ARROW = 38, KEY_DOWN_ARROW = 40, KEY_LEFT_ARROW = 37, KEY_RIGHT_ARROW = 39;
@@ -91,9 +93,58 @@ window.onload = () => {
     }, 1000 / _FPS );
 }
 
+_carReset = () => {
+
+    for(i = 0; i < TRACK_COLS; i++) {
+        for(j = 0; j < TRACK_ROWS; j++) {
+            let trackTileIndex = _trackTileToIndex(i, j);
+
+            if(TRACK_GRID[trackTileIndex] == TRACK_PLAYER) {
+                // place the car where 2 is present
+                CAR_X = (i + 0.5) * TRACK_W;
+                CAR_Y = (j + 0.5) * TRACK_H;
+
+                TRACK_GRID[trackTileIndex] = TRACK_ROAD;
+
+                break;
+            }
+        }
+    }
+
+    CAR_SPEED = 0;
+
+}
+
+_MoveAll = () => {
+
+    if(keyHeld_Gas && CAR_SPEED < CAR_SPEED_LIMIT) {
+        CAR_SPEED += CAR_DRIVE_POWER;
+
+    } else if(keyHeld_Reverse && CAR_SPEED > -1 * CAR_SPEED_LIMIT) {
+        CAR_SPEED -= CAR_REVERSE_POWER;
+
+    }
+
+    if(keyHeld_turnLeft && Math.abs(CAR_SPEED) > CAR_MIN_TURN_SPEED) {
+        CAR_ANGLE += -(CAR_TURN_RATE) * Math.PI;
+
+    } else if(keyHeld_turnRight && Math.abs(CAR_SPEED) > CAR_MIN_TURN_SPEED) {
+        CAR_ANGLE += CAR_TURN_RATE * Math.PI;
+
+    }
+
+    CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
+    CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
+
+    document.getElementById('debugText').innerHTML = `current car speed: [${CAR_SPEED}]`;
+    CAR_SPEED *= GROUNDSPEED_DECAY_MULT; // decrease the speed of car each frame
+
+}
+
 _RectFilled = (topLeftX, topLeftY, boxWidth, boxHeight, fillColor) => {
     _CANVAS_CONTEXT.fillStyle = fillColor;
     _CANVAS_CONTEXT.fillRect(topLeftX, topLeftY, boxWidth, boxHeight);
+
 }  // draw a filled rectangle starting from (x,y) with fillcolor
 
 _ballFilled = (centerX, centerY, radius, fillColor) => {
@@ -101,45 +152,58 @@ _ballFilled = (centerX, centerY, radius, fillColor) => {
     _CANVAS_CONTEXT.beginPath();
     _CANVAS_CONTEXT.arc(centerX, centerY, radius, 0, Math.PI * 2, true);
     _CANVAS_CONTEXT.fill();
+
 }  // draw a filled circle at (x,y)
 
-_carReset = () => {
-
-    CAR_X = _CANVAS.width / 2 + 50;
-    CAR_Y = _CANVAS.height / 2;
-
-    CAR_SPEED = 0;
-
+_isTrackAtTileCoord = (trackIndex) => {
+    return (TRACK_GRID[trackIndex] == 1);
 }
-
-_Collision = () => {
-
-    if( CAR_X > _CANVAS.width ) {
-        CAR_SPEED_X *= -1;
-    }else if( CAR_X < 0 ) {
-        CAR_SPEED_X *= -1;
-    }  // collision check for left and right wall
-
-    if( CAR_Y > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
-
-    } 
-
-    if( CAR_Y > _CANVAS.height ) {
-        _carReset();
-
-    }else if( CAR_Y < 0 ) {
-        CAR_SPEED_Y *= -1;
-    }  // ball bounces off the top of the canvas, and resets if it hits the bottom of the canvas
-}
-
 
 _trackTileToIndex = (trackCol, trackRow) => {
     return trackCol + TRACK_COLS * trackRow;
 }
 
-_isTrackAtTileCoord = (trackIndex) => {
-    return (TRACK_GRID[trackIndex] == 1);
+_DrawTracks = () => {
+
+    for(col=0 ; col < TRACK_COLS ; col++) {  // for each column
+        for(row=0 ; row < TRACK_ROWS ; row++) {  // for each row in that column
+            // calculate the coordinates where each brick will be in
+            let TrackTopLeftX = col * TRACK_W;
+            let TrackTopLeftY = row * TRACK_H;
+
+            if( _isTrackAtTileCoord(_trackTileToIndex(col, row) ) ){ // check if the brick is still there
+                // defined constant BRICK_GAP is used to add a margin around the brick for better visibilty
+                _RectFilled(TrackTopLeftX + TRACK_GAP, TrackTopLeftY + TRACK_GAP, TRACK_W -(TRACK_GAP*2), TRACK_H -(TRACK_GAP*2), 'cyan');
+            }else{} // if the grid value is false brick is not drawn
+        } // end of row
+    } // end of column
 }
+
+_drawBitmapCenteredAtLocationWithRotation = (graphic, atX, atY, withAngle) => {
+    _CANVAS_CONTEXT.save();
+    _CANVAS_CONTEXT.translate(atX, atY); // sets the point where the target will be
+    _CANVAS_CONTEXT.rotate(withAngle);  // rotate by CAR_ANGLE
+    _CANVAS_CONTEXT.drawImage(graphic, -graphic.width/2, -graphic.height/2);
+    _CANVAS_CONTEXT.restore();
+}
+
+_DrawCar = () => {
+    if(carImgLoaded) {
+        _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
+
+    }
+}
+
+_DrawAll = () => {
+    _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
+
+    _DrawTracks(); // draws the set of bricks
+
+    _DrawCar();
+}
+
+
+/*
 
 _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
     let _trackCol = Math.floor(pixelX / TRACK_W);
@@ -197,67 +261,24 @@ _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
     }
 }
 
-_MoveAll = () => {
+_Collision = () => {
 
-    if(keyHeld_Gas && CAR_SPEED < CAR_SPEED_LIMIT) {
-        CAR_SPEED += CAR_DRIVE_POWER;
+    if( CAR_X > _CANVAS.width ) {
+        CAR_SPEED_X *= -1;
+    }else if( CAR_X < 0 ) {
+        CAR_SPEED_X *= -1;
+    }  // collision check for left and right wall
 
-    } else if(keyHeld_Reverse && CAR_SPEED > -1 * CAR_SPEED_LIMIT) {
-        CAR_SPEED -= CAR_REVERSE_POWER;
+    if( CAR_Y > _CANVAS.height * 0.9) {  // _ballRadius added for more accurate collision
 
-    }
+    } 
 
-    if(keyHeld_turnLeft && Math.abs(CAR_SPEED) > CAR_MIN_TURN_SPEED) {
-        CAR_ANGLE += -(CAR_TURN_RATE) * Math.PI;
+    if( CAR_Y > _CANVAS.height ) {
+        _carReset();
 
-    } else if(keyHeld_turnRight && Math.abs(CAR_SPEED) > CAR_MIN_TURN_SPEED) {
-        CAR_ANGLE += CAR_TURN_RATE * Math.PI;
-
-    }
-
-    CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
-    CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
-
-    document.getElementById('debugText').innerHTML = `current car speed: [${CAR_SPEED}]`;
-    CAR_SPEED *= GROUNDSPEED_DECAY_MULT; // decrease the speed of car each frame
-
+    }else if( CAR_Y < 0 ) {
+        CAR_SPEED_Y *= -1;
+    }  // ball bounces off the top of the canvas, and resets if it hits the bottom of the canvas
 }
 
-_DrawTracks = () => {
-
-    for(col=0 ; col < TRACK_COLS ; col++) {  // for each column
-        for(row=0 ; row < TRACK_ROWS ; row++) {  // for each row in that column
-            // calculate the coordinates where each brick will be in
-            let TrackTopLeftX = col * TRACK_W;
-            let TrackTopLeftY = row * TRACK_H;
-
-            if( _isTrackAtTileCoord(_trackTileToIndex(col, row) ) ){ // check if the brick is still there
-                // defined constant BRICK_GAP is used to add a margin around the brick for better visibilty
-                _RectFilled(TrackTopLeftX + TRACK_GAP, TrackTopLeftY + TRACK_GAP, TRACK_W -(TRACK_GAP*2), TRACK_H -(TRACK_GAP*2), 'cyan');
-            }else{} // if the grid value is false brick is not drawn
-        } // end of row
-    } // end of column
-}
-
-_drawBitmapCenteredAtLocationWithRotation = (graphic, atX, atY, withAngle) => {
-    _CANVAS_CONTEXT.save();
-    _CANVAS_CONTEXT.translate(atX, atY); // sets the point where the target will be
-    _CANVAS_CONTEXT.rotate(withAngle);  // rotate by CAR_ANGLE
-    _CANVAS_CONTEXT.drawImage(graphic, -graphic.width/2, -graphic.height/2);
-    _CANVAS_CONTEXT.restore();
-}
-
-_DrawCar = () => {
-    if(carImgLoaded) {
-        _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
-
-    }
-}
-
-_DrawAll = () => {
-    _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
-
-    _DrawTracks(); // draws the set of bricks
-
-    _DrawCar();
-}
+*/
