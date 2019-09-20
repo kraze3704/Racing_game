@@ -3,7 +3,9 @@ let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
 let CAR_X, CAR_Y, CAR_ANGLE = 0;
-let CAR_SPEED, CAR_SPEED_LIMIT = 10;
+let CAR_SPEED;
+const CAR_DRIVE_POWER = 1, CAR_REVERSE_POWER = 0.8, CAR_TURN_RATE = 0.03, CAR_MIN_TURN_SPEED = 0.5, CAR_SPEED_LIMIT = 14, GROUNDSPEED_DECAY_MULT = 0.94;
+
 
 const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
 let TRACK_GRID = 
@@ -36,6 +38,21 @@ let carImg = document.createElement("img");
 let carImgLoaded = false;
 
 
+_setKeyHoldState = (key, setTo) => {
+    if(key == KEY_UP_ARROW || key == KEY_W) {
+        keyHeld_Gas = setTo;
+    } else if(key == KEY_DOWN_ARROW || key == KEY_S) {
+        keyHeld_Reverse = setTo;
+    }
+
+    if(key == KEY_LEFT_ARROW || key == KEY_A) {
+        keyHeld_turnLeft = setTo;
+    } else if(key == KEY_RIGHT_ARROW || key == KEY_D) {
+        keyHeld_turnRight = setTo;
+    }
+
+}
+
 window.onload = () => {
     _CANVAS = document.getElementById('gameCanvas');
     _CANVAS_CONTEXT = _CANVAS.getContext('2d');
@@ -53,17 +70,7 @@ window.onload = () => {
 
     document.addEventListener("keydown", keyPressed = (evt) => {
 
-        if(evt.keyCode == KEY_UP_ARROW || evt.keyCode == KEY_W) {
-            keyHeld_Gas = true;
-        } else if(evt.keyCode == KEY_DOWN_ARROW || evt.keyCode == KEY_S) {
-            keyHeld_Reverse = true;
-        }
-
-        if(evt.keyCode == KEY_LEFT_ARROW || evt.keyCode == KEY_A) {
-            keyHeld_turnLeft = true;
-        } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
-            keyHeld_turnRight = true;
-        }
+        _setKeyHoldState(evt.keyCode, true);
 
         if(evt.keyCode == 116 || evt.keyCode == 123) {  // excluded f5(116) f12(123) key for refreshing / console window
             return;
@@ -75,17 +82,7 @@ window.onload = () => {
     
     document.addEventListener("keyup", keyReleased = (evt) => {
 
-        if(evt.keyCode == KEY_UP_ARROW || evt.keyCode == KEY_W) {
-            keyHeld_Gas = false;
-        } else if(evt.keyCode == KEY_DOWN_ARROW || evt.keyCode == KEY_S) {
-            keyHeld_Reverse = false;
-        }
-
-        if(evt.keyCode == KEY_LEFT_ARROW || evt.keyCode == KEY_A) {
-            keyHeld_turnLeft = false;
-        } else if(evt.keyCode == KEY_RIGHT_ARROW || evt.keyCode == KEY_D) {
-            keyHeld_turnRight = false;
-        }
+        _setKeyHoldState(evt.keyCode, false);
     });
 
     setInterval(function(){
@@ -201,24 +198,28 @@ _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
 }
 
 _MoveAll = () => {
+
     if(keyHeld_Gas && CAR_SPEED < CAR_SPEED_LIMIT) {
-        CAR_SPEED += 0.7;
+        CAR_SPEED += CAR_DRIVE_POWER;
 
     } else if(keyHeld_Reverse && CAR_SPEED > -1 * CAR_SPEED_LIMIT) {
-        CAR_SPEED -= 0.7;
+        CAR_SPEED -= CAR_REVERSE_POWER;
 
     }
 
-    if(keyHeld_turnLeft) {
-        CAR_ANGLE += -0.03 * Math.PI;
+    if(keyHeld_turnLeft && Math.abs(CAR_SPEED) > CAR_MIN_TURN_SPEED) {
+        CAR_ANGLE += -(CAR_TURN_RATE) * Math.PI;
 
-    } else if(keyHeld_turnRight) {
-        CAR_ANGLE += 0.03 * Math.PI;
+    } else if(keyHeld_turnRight && Math.abs(CAR_SPEED) > CAR_MIN_TURN_SPEED) {
+        CAR_ANGLE += CAR_TURN_RATE * Math.PI;
 
     }
 
     CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
     CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
+
+    document.getElementById('debugText').innerHTML = `current car speed: [${CAR_SPEED}]`;
+    CAR_SPEED *= GROUNDSPEED_DECAY_MULT; // decrease the speed of car each frame
 
 }
 
