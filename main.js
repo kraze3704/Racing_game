@@ -133,9 +133,23 @@ _MoveAll = () => {
 
     }
 
+    // collision check
+    // 1. feed the next x,y coordinates to _checkForTrackAtPixelCoord
+    let CAR_X_NEXT = CAR_X + CAR_SPEED * Math.cos(CAR_ANGLE);
+    let CAR_Y_NEXT = CAR_Y + CAR_SPEED * Math.sin(CAR_ANGLE);
+
+    // 2. if it returns true proceed to move
+    if( _checkForTrackAtPixelCoord(CAR_X_NEXT, CAR_Y_NEXT) ) {
+        CAR_X = CAR_X_NEXT;
+        CAR_Y = CAR_Y_NEXT;
+    } else { // 3. else ?
+        CAR_SPEED *= -0.35;
+    }
+
+    /*
     CAR_X += CAR_SPEED * Math.cos(CAR_ANGLE);
     CAR_Y += CAR_SPEED * Math.sin(CAR_ANGLE);
-
+*/
     document.getElementById('debugText').innerHTML = `current car speed: [${CAR_SPEED}]`;
     CAR_SPEED *= GROUNDSPEED_DECAY_MULT; // decrease the speed of car each frame
 
@@ -155,57 +169,15 @@ _ballFilled = (centerX, centerY, radius, fillColor) => {
 
 }  // draw a filled circle at (x,y)
 
-_isTrackAtTileCoord = (trackIndex) => {
-    return (TRACK_GRID[trackIndex] == 1);
+_isWallAtTileCoord = (trackIndex) => {
+    return (TRACK_GRID[trackIndex] == TRACK_WALL);
 }
 
 _trackTileToIndex = (trackCol, trackRow) => {
     return trackCol + TRACK_COLS * trackRow;
 }
 
-_DrawTracks = () => {
-
-    for(col=0 ; col < TRACK_COLS ; col++) {  // for each column
-        for(row=0 ; row < TRACK_ROWS ; row++) {  // for each row in that column
-            // calculate the coordinates where each brick will be in
-            let TrackTopLeftX = col * TRACK_W;
-            let TrackTopLeftY = row * TRACK_H;
-
-            if( _isTrackAtTileCoord(_trackTileToIndex(col, row) ) ){ // check if the brick is still there
-                // defined constant BRICK_GAP is used to add a margin around the brick for better visibilty
-                _RectFilled(TrackTopLeftX + TRACK_GAP, TrackTopLeftY + TRACK_GAP, TRACK_W -(TRACK_GAP*2), TRACK_H -(TRACK_GAP*2), 'cyan');
-            }else{} // if the grid value is false brick is not drawn
-        } // end of row
-    } // end of column
-}
-
-_drawBitmapCenteredAtLocationWithRotation = (graphic, atX, atY, withAngle) => {
-    _CANVAS_CONTEXT.save();
-    _CANVAS_CONTEXT.translate(atX, atY); // sets the point where the target will be
-    _CANVAS_CONTEXT.rotate(withAngle);  // rotate by CAR_ANGLE
-    _CANVAS_CONTEXT.drawImage(graphic, -graphic.width/2, -graphic.height/2);
-    _CANVAS_CONTEXT.restore();
-}
-
-_DrawCar = () => {
-    if(carImgLoaded) {
-        _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
-
-    }
-}
-
-_DrawAll = () => {
-    _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
-
-    _DrawTracks(); // draws the set of bricks
-
-    _DrawCar();
-}
-
-
-/*
-
-_bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
+_checkForTrackAtPixelCoord = (pixelX, pixelY) => {
     let _trackCol = Math.floor(pixelX / TRACK_W);
     let _trackRow = Math.floor(pixelY / TRACK_H);
 
@@ -216,6 +188,8 @@ _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
         }
 
     let trackIndex = _trackTileToIndex(_trackCol, _trackRow);
+
+    return (TRACK_GRID[trackIndex] == TRACK_ROAD);
 
     if( _isTrackAtTileCoord(trackIndex) ) {
         // in contact with a brick, now for case check
@@ -260,6 +234,48 @@ _bounceOffTrackAtPixelCoord = (pixelX, pixelY) => {
         return false;
     }
 }
+
+_DrawTracks = () => {
+
+    for(col=0 ; col < TRACK_COLS ; col++) {  // for each column
+        for(row=0 ; row < TRACK_ROWS ; row++) {  // for each row in that column
+            let TrackTopLeftX = col * TRACK_W;
+            let TrackTopLeftY = row * TRACK_H;
+
+            if( _isWallAtTileCoord( _trackTileToIndex(col, row) )) {
+                // defined constant BRICK_GAP is used to add a margin around the brick for better visibilty
+                _RectFilled(TrackTopLeftX + TRACK_GAP, TrackTopLeftY + TRACK_GAP, TRACK_W -(TRACK_GAP*2), TRACK_H -(TRACK_GAP*2), 'cyan');
+            }else {}
+
+        } // end of row
+    } // end of column
+}
+
+_drawBitmapCenteredAtLocationWithRotation = (graphic, atX, atY, withAngle) => {
+    _CANVAS_CONTEXT.save();
+    _CANVAS_CONTEXT.translate(atX, atY); // sets the point where the target will be
+    _CANVAS_CONTEXT.rotate(withAngle);  // rotate by CAR_ANGLE
+    _CANVAS_CONTEXT.drawImage(graphic, -graphic.width/2, -graphic.height/2);
+    _CANVAS_CONTEXT.restore();
+}
+
+_DrawCar = () => {
+    if(carImgLoaded) {
+        _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
+
+    }
+}
+
+_DrawAll = () => {
+    _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
+
+    _DrawTracks(); // draws the set of bricks
+
+    _DrawCar();
+}
+
+
+/*
 
 _Collision = () => {
 
