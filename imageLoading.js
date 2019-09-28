@@ -3,11 +3,11 @@ let carImg = document.createElement("img");
 let trackImg = document.createElement("img");
 let wallImg = document.createElement("img");
 
-let ImgsToLoad = 3;
+let ImgsToLoad = 0;
 
 _countLoadedImageAndLaunchIfReady = () => {
 
-    if(--ImgsToLoad == 0) { // reducde ImgsToLoad by one and check if it equals to zero
+    if(--ImgsToLoad == 0) { // reduce ImgsToLoad by one and check if it equals to zero
 
         console.log(`starting game!`);
         _loadingDoneSoStartGame(); // if all images are loaded start game
@@ -18,15 +18,25 @@ _countLoadedImageAndLaunchIfReady = () => {
 
 }
 
+_beginLoadingImage = (imgVar, fileName) => {
+
+    imgVar.onload = _countLoadedImageAndLaunchIfReady;
+    imgVar.src = `img/${fileName}`;
+
+}
+
 _loadImages = () => {
 
-    carImg.onload = _countLoadedImageAndLaunchIfReady;
-    carImg.src = "img/car.png";
+    let imageList = [
+        {varName: carImg, fileName: "car.png"},
+        {varName: trackImg, fileName: "track_tile.png"},
+        {varName: wallImg, fileName: "wall_tile.png"}
+    ];
 
-    trackImg.onload = _countLoadedImageAndLaunchIfReady;
-    trackImg.src = "img/track_tile.png";
+    ImgsToLoad = imageList.length;
 
-    wallImg.onload = _countLoadedImageAndLaunchIfReady;
-    wallImg.src = "img/wall_tile.png";
+    for(let i=0; i < imageList.length; i++) {
+        _beginLoadingImage(imageList[i].varName, imageList[i].fileName);
+    }
 
 }
