@@ -1,5 +1,5 @@
 
-const TRACK_COLS = 20, TRACK_ROWS = 15, TRACK_GAP = 1;
+const TRACK_COLS = 20, TRACK_ROWS = 15;
 let TRACK_GRID = 
 [
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -20,7 +20,6 @@ let TRACK_GRID =
 ]
 
 const TRACK_ROAD = 0, TRACK_WALL = 1, TRACK_PLAYER = 2;
-
 
 _trackTileToIndex = (trackCol, trackRow) => {
     return trackCol + TRACK_COLS * trackRow;
@@ -57,9 +56,14 @@ _DrawTracks = () => {
             let TrackTopLeftY = row * TRACK_H;
 
             if( _isWallAtTileCoord( _trackTileToIndex(col, row) )) {
-                // defined constant BRICK_GAP is used to add a margin around the brick for better visibilty
-                _RectFilled(TrackTopLeftX + TRACK_GAP, TrackTopLeftY + TRACK_GAP, TRACK_W -(TRACK_GAP*2), TRACK_H -(TRACK_GAP*2), 'cyan');
-            }else {}
+
+                _CANVAS_CONTEXT.drawImage(wallImg, TrackTopLeftX, TrackTopLeftY);
+
+            }else {
+
+                _CANVAS_CONTEXT.drawImage(trackImg, TrackTopLeftX, TrackTopLeftY);
+                
+            }
 
         } // end of row
     } // end of column

@@ -2,6 +2,14 @@
 let _CANVAS, _CANVAS_CONTEXT;
 const _FPS = 30;
 
+_loadingDoneSoStartGame = () => {
+
+    setInterval(function(){
+        _DrawAll();
+        _MoveAll();
+    }, 1000 / _FPS );
+}
+
 window.onload = () => {
     
     _CANVAS = document.getElementById('gameCanvas');
@@ -13,11 +21,7 @@ window.onload = () => {
     _carInit();
     _inputInit();
 
-    setInterval(function(){
-        _DrawAll();
-        _MoveAll();
-    }, 1000 / _FPS );
-
+    _loadImages();
 }
 
 _MoveAll = () => {
@@ -27,8 +31,6 @@ _MoveAll = () => {
 }
 
 _DrawAll = () => {
-
-    _RectFilled(0, 0, 800, 600, '#000000'); // fills the background with black 800 x 600
 
     _DrawTracks(); // draws the set of bricks
 

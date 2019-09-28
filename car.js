@@ -1,7 +1,4 @@
 
-let carImg = document.createElement("img");
-let carImgLoaded = false;
-
 let CAR_X, CAR_Y, CAR_ANGLE = (-0.5 * Math.PI); // CAR_ANGLE faces north
 let CAR_SPEED;
 const CAR_DRIVE_POWER = 1, CAR_REVERSE_POWER = 0.8, CAR_TURN_RATE = 0.03, CAR_MIN_TURN_SPEED = 0.5, CAR_SPEED_LIMIT = 14, GROUNDSPEED_DECAY_MULT = 0.94;
@@ -9,9 +6,7 @@ const CAR_DRIVE_POWER = 1, CAR_REVERSE_POWER = 0.8, CAR_TURN_RATE = 0.03, CAR_MI
 
 _DrawCar = () => {
 
-    if(carImgLoaded) {
-        _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
-    }
+     _drawBitmapCenteredAtLocationWithRotation(carImg, CAR_X, CAR_Y, CAR_ANGLE);
 
 }
 
@@ -78,9 +73,4 @@ _carInit = () => {
 
     _carReset();
 
-    carImg.src = "car.png";
-    // load car image
-    carImg.onload = () => {
-        carImgLoaded = true;
-    }
 }
